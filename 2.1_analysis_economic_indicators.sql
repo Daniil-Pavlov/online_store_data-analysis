@@ -1,4 +1,10 @@
 -- 2.1.1
+
+-- Расчет для каждого дня в таблице orders следующих показатей:
+-- Выручку, полученную в этот день.
+-- Суммарную выручку на текущий день.
+-- Прирост выручки, полученной в этот день, относительно значения выручки за предыдущий день.
+        
 SELECT date, revenue, SUM(revenue) OVER (ORDER BY date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS total_revenue,
 ROUND(revenue*100/(LAG(revenue) OVER (ORDER BY date))-100,2) AS revenue_change 
 
@@ -11,6 +17,12 @@ FROM (  SELECT creation_time::date AS date, SUM(price) AS revenue
         GROUP BY creation_time::date) AS b
   
 -- 2.1.2
+
+-- Расчет для каждого дня в таблицах orders и user_actions следующих показатей:
+-- Выручку на пользователя (ARPU) за текущий день.
+-- Выручку на платящего пользователя (ARPPU) за текущий день.
+-- Выручку с заказа, или средний чек (AOV) за текущий день.
+        
 SELECT time::DATE AS date,
 
 ROUND(SUM(sm_ord) FILTER (WHERE order_id NOT IN (SELECT order_id FROM user_actions WHERE action = 'cancel_order')) / COUNT(DISTINCT(user_id)),2)  AS arpu,
@@ -27,6 +39,12 @@ GROUP BY time::DATE
 ORDER BY time::DATE
 
 -- 2.1.3
+
+-- Расчет по таблицам orders и user_actions для каждого дня следующих показатей:
+-- Накопленную выручку на пользователя (Running ARPU).
+-- Накопленную выручку на платящего пользователя (Running ARPPU).
+-- Накопленную выручку с заказа, или средний чек (Running AOV).
+        
 WITH old AS (   SELECT time::DATE AS date, 
                 SUM(sm_ord) FILTER (WHERE order_id NOT IN (SELECT order_id FROM user_actions WHERE action = 'cancel_order')) AS sum_day,
                 COUNT(user_id) FILTER (WHERE time = fst_dlv) AS pay_cl,
@@ -55,6 +73,12 @@ FROM old
 WINDOW w AS (ORDER BY date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW  )
 
 -- 2.1.4
+
+-- Расчет для каждого дня недели в таблицах orders и user_actions следующих показатей:
+-- Выручку на пользователя (ARPU).
+-- Выручку на платящего пользователя (ARPPU).
+-- Выручку на заказ (AOV).
+        
 WITH sm_ord AS (SELECT order_id,SUM(price) AS s_o
                 FROM (SELECT creation_time,order_id,unnest(product_ids) AS product_id FROM orders) AS a
                 LEFT JOIN products
@@ -83,6 +107,13 @@ ROUND(sum_orders::decimal/ord,2) AS  aov
 FROM x
 
 -- 2.1.5
+
+-- Расчет для каждого дня в таблицах orders и user_actions следующих показатей:
+-- Выручку, полученную в этот день.
+-- Выручку с заказов новых пользователей, полученную в этот день.
+-- Долю выручки с заказов новых пользователей в общей выручке, полученной за этот день.
+-- Долю выручки с заказов остальных пользователей в общей выручке, полученной за этот день.
+        
 WITH sum_products AS   (SELECT order_id,SUM (price) AS price_order
                         FROM (  SELECT order_id,unnest(product_ids) AS product_id
                                 FROM orders
@@ -103,6 +134,11 @@ GROUP BY time::DATE
 ORDER BY time::DATE
 
 -- 2.1.6
+
+-- Расчет для каждого товара, представленного в таблице products, за весь период времени в таблице orders следующих показатей:
+-- Суммарную выручку, полученную от продажи этого товара за весь период.
+-- Долю выручки от продажи этого товара в общей выручке, полученной за весь период.
+        
 WITH sm_pr AS   (SELECT name AS product_name,SUM(price) AS revenue, ROUND(SUM(price)*100/SUM(SUM(price)) OVER (),2) AS share_in_revenue
                 FROM (  SELECT order_id, unnest(product_ids) AS product_id
                         FROM orders
@@ -118,6 +154,19 @@ GROUP BY 1
 ORDER BY 2 DESC
 
 -- 2.1.7
+
+-- Расчет для каждого дня в таблицах orders и courier_actions следующих показатей:
+-- Выручку, полученную в этот день.
+-- Затраты, образовавшиеся в этот день.
+-- Сумму НДС с продажи товаров в этот день.
+-- Валовую прибыль в этот день (выручка за вычетом затрат и НДС).
+-- Суммарную выручку на текущий день.
+-- Суммарные затраты на текущий день.
+-- Суммарный НДС на текущий день.
+-- Суммарную валовую прибыль на текущий день.
+-- Долю валовой прибыли в выручке за этот день (долю п.4 в п.1).
+-- Долю суммарной валовой прибыли в суммарной выручке на текущий день (долю п.8 в п.5).
+        
 WITH rev_tax AS (SELECT creation_time::DATE as date,SUM(price) AS revenue,
                 SUM(CASE WHEN name IN ('сахар', 'сухарики', 'сушки', 'семечки', 
                 'масло льняное', 'виноград', 'масло оливковое', 
@@ -164,12 +213,3 @@ FROM rev_tax
 JOIN cos
 USING (date)
 WINDOW w AS (ORDER BY date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-
-
-
-
-
-
-
-
-
