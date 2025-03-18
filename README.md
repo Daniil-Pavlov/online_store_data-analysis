@@ -1,4 +1,4 @@
-# Анализ показателей интернет магазина
+# Анализ показателей сервиса доставки еды
 
 ## Cтек использованных технологий 
 <img src="https://github.com/devicons/devicon/blob/master/icons/postgresql/postgresql-original.svg" height="40"/><img src="https://336118.selcdn.ru/Gutsy-Culebra/products/Redash-Logo.png" height="40"/>
