@@ -73,4 +73,4 @@ Running ARPU и Running ARPPU имеют положительную динами
 2.2.6<br>
 Какой вывод можно сделать на основе построенных графиков?<br>
 
-[ВИЗУАЛИЗАЦИЯ](https://redash.public.karpov.courses/public/dashboards/YWpHWm47j9vGZwqK4Cnznih0t6mLW5II3M9DDHdq?org_slug=default)
+[ВИЗУАЛИЗАЦИЯ](https://redash.public.karpov.courses/public/dashboards/P4EvKqOhIqJ67Alvxndt58RyQZy4Sp5f1G43LLTX?org_slug=default)
