@@ -38,7 +38,14 @@ FROM all_cl
 WHERE ads_campaign IS NOT NULL AND order_id NOT IN (SELECT order_id FROM user_actions WHERE action = 'cancel_order')
 GROUP BY ads_campaign
 ORDER BY 2 DESC
+/*
+ВЫВОД: У рекламной кампании № 2 затраты на привлечение одного покупателя оказались ниже.
+*/
 
+
+
+
+  
 -- 2.2.2
 -- Рассчет ROI для каждого рекламного канала.
 WITH all_cl AS (SELECT time,user_id,order_id,action,
@@ -83,7 +90,15 @@ USING (product_id)
 WHERE ads_campaign IS NOT NULL AND order_id NOT IN (SELECT order_id FROM user_actions WHERE action = 'cancel_order')
 GROUP BY ads_campaign
 ORDER BY 2 DESC
+/*
+ВЫВОД: Рекламная компания № 1 в большей мере окупает расходы на привлечение новых пользователей. 
+В этот канал привлечения имеет смысл вкладывать больше бюджета.  
+*/
 
+
+
+
+  
 -- 2.2.3
 -- Расчет для каждой рекламной кампании средней стоимости заказа привлечённых пользователей за первую неделю использования приложения с 1 по 7 сентября 2022 года.
 WITH all_cl AS (SELECT time,user_id,order_id,action,
@@ -120,8 +135,6 @@ WITH all_cl AS (SELECT time,user_id,order_id,action,
                 10059, 10067, 10069, 10073, 10075, 10078, 10079, 10081, 10092, 10106, 10110, 10113, 10131) THEN 'Кампания № 2' END AS ads_campaign
                 FROM user_actions) 
 
-
-
 SELECT ads_campaign, ROUND(AVG(avg_check),2) AS avg_check
 FROM (  SELECT ads_campaign,user_id,AVG(roi) AS avg_check
         FROM (  SELECT ads_campaign,user_id,order_id, SUM(price) AS roi
@@ -135,7 +148,14 @@ FROM (  SELECT ads_campaign,user_id,AVG(roi) AS avg_check
         GROUP BY ads_campaign,user_id) AS d
 GROUP BY ads_campaign
 ORDER BY 2 DESC
+/*
+ВЫВОД: Среднем чек пользователей в двух группах значительно не отличается.
+*/
 
+
+
+
+  
 -- 2.2.4
 -- Расчет на основе данных в таблице user_actions показатель дневного Retention для всех пользователей, разбив их на когорты по дате первого взаимодействия с приложением.
 SELECT start_month, start_date, day_number,ROUND ( COUNT(DISTINCT(user_id))::decimal / MAX(COUNT(DISTINCT(user_id))) OVER (PARTITION BY start_month, start_date),2) AS retention
@@ -146,7 +166,14 @@ FROM (  SELECT time,user_id,order_id,action,
         FROM user_actions) AS a
 GROUP BY start_month, start_date, day_number
 ORDER BY start_date, day_number
+/*
+ВЫВОД: Выполнен когортный анализ для всех пользователей по дате первого взаимодействия с приложением.
+*/
 
+
+
+
+  
 -- 2.2.5
 --  Расчет для каждой рекламной кампании посчитайте Retention 1-го и 7-го дня у привлечённых пользователей. 
 WITH all_cl AS (SELECT time,user_id,order_id,action,
@@ -183,8 +210,6 @@ WITH all_cl AS (SELECT time,user_id,order_id,action,
                 10059, 10067, 10069, 10073, 10075, 10078, 10079, 10081, 10092, 10106, 10110, 10113, 10131) THEN 'Кампания № 2' END AS ads_campaign
                 FROM user_actions) 
 
-
-
 SELECT  ads_campaign,start_date,day_number::integer,ROUND(COUNT(DISTINCT(user_id))::decimal/(MAX(COUNT(DISTINCT(user_id))) OVER (PARTITION BY ads_campaign,start_date)),2)  AS retention 
 FROM (  SELECT ads_campaign,
         MIN (time) OVER (PARTITION BY user_id ORDER BY time) ::DATE AS start_date,
@@ -195,7 +220,14 @@ FROM (  SELECT ads_campaign,
 GROUP BY ads_campaign,start_date,day_number
 HAVING day_number IN (0,1,7)
 ORDER BY 1,3
+/*
+ВЫВОД: Кампании № 2 имеет более низкий Retention по сравнению с кампанией № 1. Это в первую очередь и повлияло на более низкого показателя ROI.
+*/
 
+
+
+
+  
 -- 2.2.6
 -- Для каждой рекламной кампании для каждого дня посчитайте две метрики:
 -- Накопительный ARPPU.
@@ -261,3 +293,8 @@ USING(ads_campaign)
 --WHERE ads_campaign = 'Кампания № 1'
 WHERE ads_campaign = 'Кампания № 2'
 ORDER BY ads_campaign, day_number
+/*
+ВЫВОД: Доход от заказов покупателей, пришедших после проведения рекламной кампании № 1, превысил расходы на их 
+привлечение на 5й день, а у кампании № 2 этот этот показатель не превысил расходы на привлечение клиентов вовсе за 
+наблюдаемый период.
+*/
