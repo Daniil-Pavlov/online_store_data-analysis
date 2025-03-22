@@ -15,7 +15,15 @@ FROM (  SELECT creation_time::date AS date, SUM(price) AS revenue
         LEFT JOIN products
         USING (product_id)
         GROUP BY creation_time::date) AS b
-  
+/*
+ВЫВОД: 5 и 6 сентября наблюдалось снижение выручки. В эти же дни наблюдалось значительное снижение количества платящих клиентов. 
+Так как большая часть наших клиентов делают долько 1 заказ этот фактор значительно отразился на выручке.       
+*/
+
+
+
+
+        
 -- 2.1.2
 
 -- Расчет для каждого дня в таблицах orders и user_actions следующих показатей:
@@ -37,7 +45,16 @@ LEFT JOIN ( SELECT order_id,sum(price) AS sm_ord
 USING(order_id)
 GROUP BY time::DATE
 ORDER BY time::DATE
+/*
+ВЫВОД: Метрика AOV более стабильна и не имеет сильных отклоненний на большей части рассматриваемого периода в отличие от ARPU и ARPAU.<br>
+ARPU и ARPAU имеют несколько периодов снижения, которые совпадают с динамикой числа платящих пользователей. <br>
+Доля платящих пользователей значительно не изменяется.
+*/
 
+
+
+
+        
 -- 2.1.3
 
 -- Расчет по таблицам orders и user_actions для каждого дня следующих показатей:
@@ -71,7 +88,15 @@ ROUND(SUM(sum_day) OVER w /SUM(pay_cl) OVER w,2) AS running_arppu,
 ROUND(SUM(sum_day) OVER w /SUM(ord) OVER w,2) AS running_aov 
 FROM old
 WINDOW w AS (ORDER BY date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW  )
+/*
+ВЫВОД: Running ARPU и Running ARPPU имеют положительную динамику и ростут на всем рассматриваемом периоде. Метрика Running AOV стабильна и колеблется в районе 383.<br>
+Со временем растёт число заказов на одного пользователя.
+*/
 
+
+
+
+        
 -- 2.1.4
 
 -- Расчет для каждого дня недели в таблицах orders и user_actions следующих показатей:
@@ -105,7 +130,15 @@ ROUND(sum_orders::decimal/all_us,2) AS arpu,
 ROUND(sum_orders::decimal/pay_us,2) AS arppu,
 ROUND(sum_orders::decimal/ord,2) AS  aov
 FROM x
+/*
+ВЫВОД: Метрики ARPU и ARPPU принимали наибольшие значения в субботу, что согласуется со стандартным поведением пользователей сервиса доставки еды.<br>
+Средний чек существенно не изменяется в зависимости от дня, а рост ARPU и ARPPU  обусловлен увеличением количества клиентов.      
+*/
 
+
+
+
+        
 -- 2.1.5
 
 -- Расчет для каждого дня в таблицах orders и user_actions следующих показатей:
@@ -132,7 +165,15 @@ FROM (  SELECT time ,user_id,order_id,price_order,action, MIN(time) OVER (PARTIT
         USING(order_id)) AS n
 GROUP BY time::DATE
 ORDER BY time::DATE
+/*
+ВЫВОД: Доля выручки с заказов новых пользователей в общей выручке снижается, что закономерно так как ростет общее количество 
+клиентов и старые клиенты также активны.        
+*/
 
+
+
+
+        
 -- 2.1.6
 
 -- Расчет для каждого товара, представленного в таблице products, за весь период времени в таблице orders следующих показатей:
@@ -152,7 +193,14 @@ SELECT (CASE WHEN share_in_revenue < 0.5 THEN 'ДРУГОЕ' ELSE product_name E
 FROM sm_pr
 GROUP BY 1
 ORDER BY 2 DESC
+/*
+ВЫВОД: Свинина является товаром с наибольшей долей в выручке и в целом мясо как группа товаров является самой популярной.     
+*/
 
+
+
+
+        
 -- 2.1.7
 
 -- Расчет для каждого дня в таблицах orders и courier_actions следующих показатей:
@@ -213,3 +261,8 @@ FROM rev_tax
 JOIN cos
 USING (date)
 WINDOW w AS (ORDER BY date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+/*
+ВЫВОД: Начиная с 31 Августа ежедневная валовая прибыль сервиса стала положительной.<br>
+6 Сентября суммарная валовая прибыль превысила нулевую отметку и сервис впервые «вышел в плюс» по этому показателю.<br>
+Оптимизация стоимости сборки заказа в сентябре позволила увидеть в этом месяце положительную валовую прибыль
+*/
